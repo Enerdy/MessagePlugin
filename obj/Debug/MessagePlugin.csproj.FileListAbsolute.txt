@@ -1,0 +1,7 @@
+C:\Users\ja450n.OZ\Documents\GitHub\Bin\Debug\PluginTemplate\MessagePlugin.dll
+C:\Users\ja450n.OZ\Documents\GitHub\Bin\Debug\PluginTemplate\MessagePlugin.pdb
+C:\Program Files (x86)\Steam\SteamApps\common\Terraria_TShockDev\ServerPlugins\MessagePlugin.dll
+C:\Program Files (x86)\Steam\SteamApps\common\Terraria_TShockDev\ServerPlugins\MessagePlugin.pdb
+C:\Users\ja450n.OZ\Documents\GitHub\MessagePlugin\obj\Debug\MessagePlugin.dll
+C:\Users\ja450n.OZ\Documents\GitHub\MessagePlugin\obj\Debug\MessagePlugin.pdb
+C:\Users\ja450n.OZ\Documents\GitHub\MessagePlugin\obj\Debug\MessagePlugin.csprojResolveAssemblyReference.cache

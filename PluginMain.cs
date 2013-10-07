@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Drawing;
-using Terraria;
-using Hooks;
+using System.ComponentModel;
 using MySql.Data.MySqlClient;
+
+using Terraria;
+using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.DB;
-using System.ComponentModel;
+using TShockAPI.Hooks;
 
 namespace MessagePlugin
 {
-    [APIVersion(1, 11)]
+    [ApiVersion(1, 14)]
     public class MessagePlugin : TerrariaPlugin
     {
         public static List<MPlayer> Players = new List<MPlayer>();
@@ -24,7 +26,7 @@ namespace MessagePlugin
 
         public override string Author
         {
-            get { return "Created by Lmanik."; }
+            get { return "ja450n - original by Lmanik."; }
         }
 
         public override string Description
@@ -39,22 +41,27 @@ namespace MessagePlugin
 
         public override void Initialize()
         {
-            GameHooks.Update += OnUpdate;
-            GameHooks.Initialize += OnInitialize;
-            NetHooks.GreetPlayer += OnGreetPlayer;
-            ServerHooks.Leave += OnLeave;
-            ServerHooks.Chat += OnChat;
-        }
+
+            ServerApi.Hooks.GameUpdate.Register(this, (args) => { OnUpdate(); });
+            ServerApi.Hooks.GameInitialize.Register(this, (args) => { OnInitialize(); });
+            ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
+            ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
+            ServerApi.Hooks.ServerChat.Register(this, OnChat);
+
+       }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                GameHooks.Update -= OnUpdate;
-                GameHooks.Initialize -= OnInitialize;
-                NetHooks.GreetPlayer -= OnGreetPlayer;
-                ServerHooks.Leave -= OnLeave;
-                ServerHooks.Chat -= OnChat;
+
+                ServerApi.Hooks.GameUpdate.Deregister(this, (args) => { OnUpdate(); });
+                ServerApi.Hooks.GameInitialize.Deregister(this, (args) => { OnInitialize(); });
+                ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
+                ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
+                ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
+
+
             }
             base.Dispose(disposing);
         }
@@ -98,29 +105,29 @@ namespace MessagePlugin
         {
         }
 
-        public void OnGreetPlayer(int who, HandledEventArgs e)
+        public void OnGreetPlayer(GreetPlayerEventArgs e)
         {
-            MPlayer player = new MPlayer(who);
+            MPlayer player = new MPlayer(e.Who);
 
             lock (MessagePlugin.Players)
                 MessagePlugin.Players.Add(player);
 
-            if (TShock.Players[who].Group.HasPermission("msguse"))
+            if (TShock.Players[e.Who].Group.HasPermission("msguse"))
             {
-                string name = TShock.Players[who].Name;
+                string name = TShock.Players[e.Who].Name;
                 int count = GetUnreadEmailsByName(name);
-                TShock.Players[who].SendMessage("You have got " + count + " unread messages.", Color.Yellow);
+                TShock.Players[e.Who].SendMessage("You have " + count + " unread messages.", Color.Yellow);
             }   
         }
 
         // Remove all players
-        public void OnLeave(int ply)
+        public void OnLeave(LeaveEventArgs e)
         {
             lock (Players)
             {
                 for (int i = 0; i < Players.Count; i++)
                 {
-                    if (Players[i].Index == ply)
+                    if (Players[i].Index == e.Who)
                     {
                         Players.RemoveAt(i);
                         break;
@@ -129,7 +136,7 @@ namespace MessagePlugin
             }
         }
 
-        public void OnChat(messageBuffer msg, int ply, string text, HandledEventArgs e)
+        public void OnChat(ServerChatEventArgs e)
         {
         }
 
@@ -138,12 +145,19 @@ namespace MessagePlugin
         {
             if (name != null)
             {
-                List<SqlValue> where = new List<SqlValue>();
-                where.Add(new SqlValue("mailTo", "'" + name + "'"));
-                where.Add(new SqlValue("Read", "'" + "U" + "'"));
-                int count = MDb.SQLEditor.ReadColumn("MessagePlugin", "mailTo", where).Count;
+                String query = "SELECT Id FROM MessagePlugin WHERE mailTo=@0 AND Read=@1;";
+                List<int> messageIDs = new List<int>();
 
-                return count;
+                using (var reader = MDb.DB.QueryReader(query, name, "U"))
+                {
+                    while (reader.Read())
+                    {
+                        messageIDs.Add(reader.Get<int>("Id"));
+                    }
+                }
+                return messageIDs.Count;
+                    
+                
             }
 
             return 0;
@@ -166,7 +180,7 @@ namespace MessagePlugin
             if (TShock.Utils.FindPlayer(to).Count > 0)
             {
                 if(MPlayer.GetPlayerByName(to).TSPlayer.Group.HasPermission("msguse"))
-                    MPlayer.GetPlayerByName(to).TSPlayer.SendMessage("You have got new message from " + from, Color.Aqua);
+                    MPlayer.GetPlayerByName(to).TSPlayer.SendMessage("You have new message from " + from, Color.Aqua);
             }
             else
             {
@@ -209,27 +223,27 @@ namespace MessagePlugin
                 case "inbox":
                     {
                         // Fetch all unread messages
-                        List<SqlValue> where = new List<SqlValue>();
-                        where.Add(new SqlValue("mailTo", "'" + MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name + "'"));
-                        where.Add(new SqlValue("Read", "'" + "U" + "'"));
-
-                        for (int i = 0; i < MDb.SQLEditor.ReadColumn("MessagePlugin", "Id", where).Count; i++)
+                        String query = "SELECT * FROM MessagePlugin WHERE mailTo=@0 AND Read=@1;";
+                        using (var reader = MDb.DB.QueryReader(query, MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name, "U"))
                         {
-                            
-                            DateTime date = Convert.ToDateTime(MDb.SQLEditor.ReadColumn("MessagePlugin", "Date", where)[i]);
-                            string datum = String.Format("{0:dd.MM.yyyy - HH:mm}", date);
+                            while (reader.Read())
+                            {
+                                // messageIDs.Add(reader.Get<int>("Id"));
+                                DateTime date = Convert.ToDateTime(reader.Get<string>("Date"));
+                                string datum = String.Format("{0:dd.MM.yyyy - HH:mm}", date);
+                                
+                                Messages.Add(new Message(
+                                    (string)Convert.ToString(reader.Get<int>("Id")),
+                                    (string)reader.Get<string>("mailFrom"),
+                                    (string)reader.Get<string>("mailTo"),
+                                    (string)reader.Get<string>("mailText"),
+                                    datum,
+                                    (string)reader.Get<string>("Read")
+                                    ));
 
-                            //create message list
-                            Messages.Add(new Message(
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "Id", where)[i].ToString(),
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailFrom", where)[i],
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailTo", where)[i],
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailText", where)[i],
-                                datum,
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "Read", where)[i]
-                                ));
+                            }
                         }
-
+                        
                         //How many messages per page
                         const int pagelimit = 5;
                         //How many messages per line
@@ -256,7 +270,7 @@ namespace MessagePlugin
 
                         if (messages.Count == 0)
                         {
-                            args.Player.SendMessage("You haven't got unread messages.", Color.Red);
+                            args.Player.SendMessage("No unread messages.", Color.Red);
                             return;
                         }
 
@@ -301,25 +315,30 @@ namespace MessagePlugin
                 case "list":
                     {
                         // Fetch all messages
-                        List<SqlValue> where = new List<SqlValue>();
-                        where.Add(new SqlValue("mailTo", "'" + MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name + "'"));
+                        
+                        String query = "SELECT * FROM MessagePlugin WHERE mailTo=@0;";
+                        List<int> messageIDs = new List<int>();
 
-                        for (int i = 0; i < MDb.SQLEditor.ReadColumn("MessagePlugin", "Id", where).Count; i++)
+                        using (var reader = MDb.DB.QueryReader(query, MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name))
                         {
-                            DateTime date = Convert.ToDateTime(MDb.SQLEditor.ReadColumn("MessagePlugin", "Date", where)[i]);
-                            string datum = String.Format("{0:dd.MM.yyyy - HH:mm}", date);
+                            while (reader.Read())
+                            {
+                                // messageIDs.Add(reader.Get<int>("Id"));
+                                DateTime date = Convert.ToDateTime(reader.Get<string>("Date"));
+                                string datum = String.Format("{0:dd.MM.yyyy - HH:mm}", date);
 
-                            //create message list
-                            Messages.Add(new Message(
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "Id", where)[i].ToString(),
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailFrom", where)[i],
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailTo", where)[i],
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "mailText", where)[i],
-                                datum,
-                                (string)MDb.SQLEditor.ReadColumn("MessagePlugin", "Read", where)[i]
-                                ));
+                                Messages.Add(new Message(
+                                    (string)Convert.ToString(reader.Get<int>("Id")),
+                                    (string)reader.Get<string>("mailFrom"),
+                                    (string)reader.Get<string>("mailTo"),
+                                    (string)reader.Get<string>("mailText"),
+                                    datum,
+                                    (string)reader.Get<string>("Read")
+                                    ));
+
+                            }
                         }
-                  
+                                        
                         //How many messages per page
                         const int pagelimit = 5;
                         //How many messages per line
@@ -346,7 +365,7 @@ namespace MessagePlugin
 
                         if (messages.Count == 0)
                         {
-                            args.Player.SendMessage("You haven't got messages.", Color.Red);
+                            args.Player.SendMessage("You have no messages.", Color.Red);
                             return;
                         }
 
@@ -413,11 +432,38 @@ namespace MessagePlugin
                                 List<SqlValue> values = new List<SqlValue>();
                                 values.Add(new SqlValue("Read", "'" + "R" + "'"));
                                 MDb.SQLEditor.UpdateValues("MessagePlugin", values, where);
-                            }
-                            else
+
+                            /*
+                            String query = "SELECT * FROM MessagePlugin WHERE mailTo=@0 AND Id=@1;";
+                            String queryUpdateRead = "UPDATE MessagePlugin SET Read=@0 WHERE Id=@1;";
+                            
+                            using (var reader = MDb.DB.QueryReader(query, MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name, args.Parameters[1].ToString()))
                             {
-                                args.Player.SendMessage("Messages with this id \"" + args.Parameters[1].ToString() + "\" is not exist.", Color.Red);
+                                if (reader.Read())
+                                {
+                                    string id = Convert.ToString(reader.Get<int>("Id"));
+                                    string from = reader.Get<string>("mailFrom");
+                                    string text = reader.Get<string>("mailText");
+
+                                    DateTime date = Convert.ToDateTime(reader.Get<string>("Date"));
+                                    string datum = String.Format("{0:dd.MM.yyyy - HH:mm}", date);
+
+                                    args.Player.SendInfoMessage(id + ") On " + datum + ", " + from + " wrote:", Color.Aqua);
+                                    args.Player.SendInfoMessage(text, Color.White);                                                                                                      
+                              
+                                    if (MDb.DB.Query(queryUpdateRead, "R", args.Parameters[1].ToString()) != 1)
+                                    {
+                                        Log.ConsoleError("[MessagePlugin] Failed to update Read status of message");
+                                    }
+                                                                        
+                                }
+                             */
                             }
+                                else
+                                {
+                                    args.Player.SendErrorMessage("Messages with id \"" + args.Parameters[1].ToString() + "\" is not exist.", Color.Red);
+                                }
+                                                                                  
                         }
                         else
                         {
@@ -478,7 +524,7 @@ namespace MessagePlugin
                                         }
                                         else
                                         {
-                                            args.Player.SendMessage("You haven't got any read messages.", Color.Red);
+                                            args.Player.SendMessage("You have no read messages.", Color.Red);
                                         }
 
                                         break;
@@ -503,7 +549,7 @@ namespace MessagePlugin
                                         }
                                         else
                                         {
-                                            args.Player.SendMessage("You haven't god any unread messages.", Color.Red);
+                                            args.Player.SendMessage("You have no unread messages.", Color.Red);
                                         }
 
                                         break;
@@ -550,11 +596,11 @@ namespace MessagePlugin
                                 string mailTo = args.Parameters[0].ToString();
                                 SendMessage(mailTo, MPlayer.GetPlayerById(args.Player.Index).TSPlayer.Name, args.Parameters[1]);
 
-                                args.Player.SendMessage("You send message to " + mailTo, Color.Green);
+                                args.Player.SendMessage("Message sent to " + mailTo, Color.Green);
                             }
                             else
                             {
-                                args.Player.SendMessage("Player " + args.Parameters[0] + " is not exist.", Color.Red);
+                                args.Player.SendMessage("Player " + args.Parameters[0] + " does not exist.", Color.Red);
                             }
 
                         }

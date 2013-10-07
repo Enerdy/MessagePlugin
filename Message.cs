@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Drawing;
-using Terraria;
-using Hooks;
 using MySql.Data.MySqlClient;
+using System.ComponentModel;
+
+using Terraria;
+using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.DB;
-using System.ComponentModel;
+using TShockAPI.Hooks;
 
 namespace MessagePlugin
 {
