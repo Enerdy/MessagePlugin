@@ -9,6 +9,7 @@ namespace MessagePlugin
 {
     class MDb
     {
+        /*
         public static string terraDB = Path.Combine(TShock.SavePath, "message_plugin.sqlite");
         public static IDbConnection DB;
         public static SqlTableEditor SQLEditor;
@@ -37,6 +38,6 @@ namespace MessagePlugin
 
             SQLWriter.EnsureExists(table);
         }
-
+        */
     }
 }

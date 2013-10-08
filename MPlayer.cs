@@ -13,8 +13,22 @@ using TShockAPI.Hooks;
 
 namespace MessagePlugin
 {
-    public class MPlayer
+    public class mPlayer
     {
+        public int Index { get; set; }
+		public TSPlayer TSPlayer { get { return TShock.Players[Index]; } }
+        public string Name { get; set; }
+
+        public mPlayer(int index)
+		{
+			this.Index = index;
+			this.Name = string.Empty;
+
+		}
+    }
+}
+        
+        /*
         public int Index { get; set; }
         public TSPlayer TSPlayer { get { return TShock.Players[Index]; } }
 
@@ -71,3 +85,4 @@ namespace MessagePlugin
 
     }
 }
+    */

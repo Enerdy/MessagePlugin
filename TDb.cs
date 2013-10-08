@@ -8,6 +8,7 @@ namespace MessagePlugin
 {
     class TDb
     {
+        /*
         public static SqlTableEditor SQLEditor;
         public static SqlTableCreator SQLWriter;
 
@@ -16,6 +17,7 @@ namespace MessagePlugin
             SQLEditor = new SqlTableEditor(TShock.DB, TShock.DB.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
             SQLWriter = new SqlTableCreator(TShock.DB, TShock.DB.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
         }
+        */
 
     }
 }
