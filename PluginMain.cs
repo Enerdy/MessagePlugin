@@ -48,14 +48,14 @@ namespace MessagePlugin
 
         public override Version Version
         {
-            get { return new Version(0, 9, 3); }
+            get { return new Version(0, 9, 4); }
         }
 
         public override void Initialize()
         {
 
-            ServerApi.Hooks.GameUpdate.Register(this, (args) => { OnUpdate(); });
-            ServerApi.Hooks.GameInitialize.Register(this, (args) => { OnInitialize(); });
+            ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
+            ServerApi.Hooks.GameInitialize.Register(this,OnInitialize);
             ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
             ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
             ServerApi.Hooks.ServerChat.Register(this, OnChat);
@@ -67,8 +67,8 @@ namespace MessagePlugin
             if (disposing)
             {
 
-                ServerApi.Hooks.GameUpdate.Deregister(this, (args) => { OnUpdate(); });
-                ServerApi.Hooks.GameInitialize.Deregister(this, (args) => { OnInitialize(); });
+                ServerApi.Hooks.GameUpdate.Deregister(this,  OnUpdate);
+                ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
                 ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
                 ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
                 ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
@@ -84,7 +84,7 @@ namespace MessagePlugin
             this.Players = new mPlayer[256];
         }
 
-        public void OnInitialize()
+        public void OnInitialize(EventArgs e)
         {
 
 
@@ -148,7 +148,7 @@ namespace MessagePlugin
         }
 
 
-        public void OnUpdate()
+        public void OnUpdate(EventArgs e)
         {
         }
 
