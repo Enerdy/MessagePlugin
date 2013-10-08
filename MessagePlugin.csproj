@@ -77,8 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MPlayer.cs" />
-    <Compile Include="TDb.cs" />
-    <Compile Include="MDb.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="PluginMain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

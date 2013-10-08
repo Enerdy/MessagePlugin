@@ -86,11 +86,7 @@ namespace MessagePlugin
 
         public void OnInitialize()
         {
-            //set tshock db
-            //TDb.InitTshockDB();
 
-            //init Message Plugin db
-            // MDb.InitMessageDB();
 
             switch (TShock.Config.StorageType.ToLower())
             {
@@ -158,7 +154,7 @@ namespace MessagePlugin
 
         public void OnGreetPlayer(GreetPlayerEventArgs e)
         {
-            //MPlayer player = new MPlayer(e.Who);
+
             try
             {
                 Players[e.Who] = new mPlayer(e.Who);
@@ -172,14 +168,7 @@ namespace MessagePlugin
 
             }
             catch { }
-            /*
-            if (TShock.Players[e.Who].Group.HasPermission("msguse"))
-            {
-                string name = TShock.Players[e.Who].Name;
-                int count = GetUnreadEmailsByName(name);
-                TShock.Players[e.Who].SendMessage("You have " + count + " unread messages.", Color.Yellow);
-            } 
-            */
+
         }
 
         // Remove all players
@@ -195,10 +184,6 @@ namespace MessagePlugin
         public void OnChat(ServerChatEventArgs e)
         {
         }
-
-
-
-
 
 
         #region commandHandlers
@@ -217,8 +202,10 @@ namespace MessagePlugin
                     {
                         messageIDs.Add(reader.Get<int>("Id"));
                     }
+                    reader.Reader.Close();
                 }
                 return messageIDs.Count;
+                
                     
                 
             }
@@ -304,6 +291,7 @@ namespace MessagePlugin
                                     ));
 
                             }
+                            reader.Reader.Close();
                         }
                         
                         //How many messages per page
@@ -399,6 +387,7 @@ namespace MessagePlugin
                                     ));
 
                             }
+                            reader.Reader.Close();
                         }
                                         
                         //How many messages per page
@@ -535,6 +524,7 @@ namespace MessagePlugin
                                             {
                                                 messageIDs.Add(reader.Get<int>("Id"));
                                             }
+                                            reader.Reader.Close();
                                         }
 
                                         if (messageIDs.Count > 0)
@@ -566,6 +556,7 @@ namespace MessagePlugin
                                             {
                                                 messageIDs.Add(reader.Get<int>("Id"));
                                             }
+                                            reader.Reader.Close();
                                         }
 
                                         if (messageIDs.Count > 0)
@@ -594,6 +585,7 @@ namespace MessagePlugin
                                             {
                                                 messageIDs.Add(reader.Get<int>("Id"));
                                             }
+                                            reader.Reader.Close();
                                         }
 
                                         if (messageIDs.Count > 0)
@@ -624,6 +616,7 @@ namespace MessagePlugin
                                             {
                                                 messageIDs.Add(reader.Get<int>("Id"));
                                             }
+                                            reader.Reader.Close();
                                         }
 
                                         if (messageIDs.Count > 0)
@@ -665,6 +658,7 @@ namespace MessagePlugin
                                 {
                                     userIDs.Add(reader.Get<int>("Id"));
                                 }
+                                reader.Reader.Close();
                             }
                             
                             if (userIDs.Count > 0)

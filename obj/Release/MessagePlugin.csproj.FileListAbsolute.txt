@@ -1,2 +1,5 @@
 C:\Users\ja450n.OZ\Documents\GitHub\MessagePlugin\bin\MessagePlugin.dll
 C:\Users\ja450n.OZ\Documents\GitHub\MessagePlugin\obj\Release\MessagePlugin.dll
+C:\Users\jowens\Documents\GitHub\MessagePlugin\obj\Release\MessagePlugin.csprojResolveAssemblyReference.cache
+C:\Users\jowens\Documents\GitHub\MessagePlugin\obj\Release\MessagePlugin.dll
+C:\Users\jowens\Documents\GitHub\MessagePlugin\bin\MessagePlugin.dll
