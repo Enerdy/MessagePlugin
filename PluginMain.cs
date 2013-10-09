@@ -48,7 +48,7 @@ namespace MessagePlugin
 
         public override Version Version
         {
-            get { return new Version(0, 9, 4); }
+            get { return new Version(0, 9, 5); }
         }
 
         public override void Initialize()
@@ -227,7 +227,7 @@ namespace MessagePlugin
                 {
                     if (player.Group.HasPermission("msguse"))
                     {
-                        player.SendInfoMessage("You have new message from " + from, Color.Aqua);
+                        player.SendInfoMessage("You have a new message from " + from, Color.Aqua);
                     }
                 }
             }
@@ -244,8 +244,8 @@ namespace MessagePlugin
             args.Player.SendMessage("To send message use /msg <playerName> <message>", Color.Aqua);
             args.Player.SendMessage("lists unread messages by /msg inbox <page number>", Color.Aqua);
             args.Player.SendMessage("lists messages by /msg list <page number>", Color.Aqua);
-            args.Player.SendMessage("to read specify message /msg read <id>, id give from list", Color.Aqua);
-            args.Player.SendMessage("for delete message use /msg del <id>", Color.Aqua);
+            args.Player.SendMessage("to read a specific message /msg read <id>, id from list", Color.Aqua);
+            args.Player.SendMessage("for delete a message use /msg del <id>", Color.Aqua);
         }
 
         // Run Message command
@@ -491,7 +491,7 @@ namespace MessagePlugin
                                 }
                                 else
                                 {
-                                    args.Player.SendErrorMessage("Messages with id \"" + args.Parameters[1].ToString() + "\" is not exist.", Color.Red);
+                                    args.Player.SendErrorMessage("Message id \"" + args.Parameters[1].ToString() + "\" not found.", Color.Red);
                                 }
                             }
                                                                                   
